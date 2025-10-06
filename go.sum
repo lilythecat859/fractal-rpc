@@ -1,0 +1,10 @@
+github.com/ClickHouse/clickhouse-go/v2 v2.23.0 h1:Zg5Jd/3T8l5JmHGMwR1Q5X2bKZcLJ0jh7s1x8pVqP0M=
+github.com/ClickHouse/clickhouse-go/v2 v2.23.0/go.mod h1:1M5nT5RUA0G8nXIxX4hIoQcCgL6QknT5RUYfSF9lT6Q=
+github.com/gagliardetto/solana-go v1.10.2 h1:Z/K6rN1RI8M6wSbY7u9CVQ2Hk3l1I1Q6r2tBGqB2sY=
+github.com/gagliardetto/solana-go v1.10.2/go.mod h1:J6jZ/EFGsHFc8zmuhVbL3p0sMJQE8EKdPqUIp/pqiLQ=
+github.com/gorilla/rpc v1.0.0 h1:KjZ5DUfC9c6KzX7jFfwKESl2cXLIkca6xTj7DGgvQ=
+github.com/gorilla/rpc v1.0.0/go.mod h1:vN7/7VEI8aZJ4J6Q9sB6c1Cga3N7M8zCL8g5pzC8E=
+github.com/spf13/viper v1.18.2 h1:V0sQXAz2ScdQb4Xq7S2dX0Qd5Iz5bV5u4z5c5z5c5=
+github.com/spf13/viper v1.18.2/go.mod h1:5jJ652jqwK6fKkL6hI2XEd5Zq/wKXf5qX5X5q5X5=
+go.uber.org/zap v1.27.0 h1:5h5T5rTTA5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T=
+go.uber.org/zap v1.27.0/go.mod h1:5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T5T=
