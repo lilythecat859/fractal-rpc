@@ -1,0 +1,33 @@
+# Fractal Historical-RPC config
+# Copy to fractal.toml and fill secrets
+
+http_port = 8899
+rpc_path  = "/"
+
+# JWT HS256 secret (base64)
+jwt_secret = "CHANGE_ME"
+
+[clickhouse]
+addr     = "tcp://localhost:9000"
+database = "solana_history"
+[clickhouse.auth]
+username = "default"
+password = ""
+
+# per-column codec override (optional)
+[clickhouse.codec]
+blocks      = "ZSTD(3)"
+transactions = "ZSTD(3)"
+signatures   = "ZSTD(3)"
+
+[s3]
+bucket    = "solana-history"
+region    = "us-east-1"
+access_key = ""
+secret_key = ""
+endpoint   = ""  # minio http://localhost:9000
+
+[fractal]
+shard_bits        = 6          # 2^6 = 64 shards
+cache_fraction    = 0.7        # 70 % of RAM for ClickHouse merges
+parquet_page_size = 10000
