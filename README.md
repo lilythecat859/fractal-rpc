@@ -1,4 +1,4 @@
-```
+
 # Fractal Historical-RPC for Solana
 
 A blazing-fast, sharded, AGPL-licensed replacement for BigTable that serves Solana's historical JSON-RPC methods at **1/10th the cost**.
