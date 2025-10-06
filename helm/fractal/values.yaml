@@ -1,0 +1,32 @@
+replicaCount: 1
+image:
+  repository: ghcr.io/lilythecat859/fractal
+  tag: latest
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 8899
+ingress:
+  enabled: false
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+config: |
+  http_port = 8899
+  rpc_path  = "/"
+  jwt_secret = "demo-secret-change-me"
+  [clickhouse]
+  addr     = "tcp://clickhouse:9000"
+  database = "solana_history"
+  [clickhouse.auth]
+  username = "default"
+  password = ""
+  [fractal]
+  shard_bits = 6
+  cache_fraction = 0.7
+  parquet_page_size = 10000
+  
