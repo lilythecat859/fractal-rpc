@@ -1,0 +1,6 @@
+apiVersion: v2
+name: fractal
+description: Fractal Historical-RPC for Solana
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
