@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fractal
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: fractal
+  template:
+    metadata:
+      labels:
+        app: fractal
+    spec:
+      containers:
+      - name: fractal
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - containerPort: 8899
+        env:
+        - name: CGO_ENABLED
+          value: "1"
+        volumeMounts:
+        - name: config
+          mountPath: /etc/fractal.toml
+          subPath: fractal.toml
+        resources: {{- toYaml .Values.resources | nindent 10 }}
+      volumes:
+      - name: config
+        configMap:
+          name: fractal-config
+          
