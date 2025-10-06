@@ -19,5 +19,6 @@ go run ./cmd/fractal
 Alpha – benchmarks show **93 % cost reduction** vs BigTable.
 
 ## License
+
 AGPL-3.0-or-later
-```
+
