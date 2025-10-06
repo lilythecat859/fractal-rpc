@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.8
+    ports:
+      - "9000:9000"
+      - "8123:8123"
+    volumes:
+      - ch_data:/var/lib/clickhouse
+    environment:
+      CLICKHOUSE_DB: solana_history
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+
+  fractal:
+    build: .
+    ports:
+      - "8899:8899"
+    volumes:
+      - ./fractal.toml:/etc/fractal.toml:ro
+    depends_on:
+      - clickhouse
+    environment:
+      CGO_ENABLED: 1
+
+volumes:
+  ch_data:
+  
