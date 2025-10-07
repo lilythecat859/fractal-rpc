@@ -1,0 +1,26 @@
+image:
+  tag: v0.1.0   # pin to exact release
+
+replicaCount: 2
+
+resources:
+  limits:
+    cpu: 2
+    memory: 4Gi
+  requests:
+    cpu: 1
+    memory: 2Gi
+
+env:
+- name: FRACTAL_CACHE_FRACTION
+  value: "0.9"
+- name: FRACTAL_SHARD_BITS
+  value: "8"
+
+service:
+  port: 8899
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8899"
+    prometheus.io/path: "/metrics"
+    
