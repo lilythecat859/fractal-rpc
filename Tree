@@ -1,0 +1,43 @@
+.
+├── .env.example
+├── .github
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── Dockerfile
+├── LICENSE
+├── Makefile
+├── README.md
+├── cmd
+│   └── fractal
+│       └── main.go
+├── docker-compose.yml
+├── fractal.toml.example
+├── go.mod
+├── go.sum
+├── helm
+│   ├── fractal
+│   │   ├── Chart.yaml
+│   │   ├── templates
+│   │   │   ├── deployment.yaml
+│   │   │   ├── hpa.yaml
+│   │   │   ├── ingress.yaml
+│   │   │   ├── service.yaml
+│   │   │   └── serviceaccount.yaml
+│   │   └── values.yaml
+│   └── values-prod.yaml
+├── internal
+│   ├── debug
+│   │   └── debug.go
+│   ├── metrics
+│   │   └── metrics.go
+│   └── store
+│       ├── clickhouse.go
+│       └── interface.go
+└── scripts
+    ├── bootstrap.sql
+    ├── check-tree.sh
+    ├── import-bq.sh
+    ├── override.conf
+    ├── release.sh
+    └── test.sh
