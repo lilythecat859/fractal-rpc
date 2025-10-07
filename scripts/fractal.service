@@ -1,0 +1,25 @@
+[Unit]
+Description=Fractal Historical-RPC for Solana
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=fractal
+Group=fractal
+ExecStart=/usr/local/bin/fractal
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+Environment="CGO_ENABLED=1"
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/fractal
+LogsDirectory=fractal
+
+[Install]
+WantedBy=multi-user.target
