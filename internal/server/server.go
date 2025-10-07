@@ -1,27 +1,27 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
 package server
 
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
-	"github.com/lilythecat859/solana-historical-rpc/internal/config"
-	"github.com/lilythecat859/solana-historical-rpc/internal/rpc"
-	"github.com/lilythecat859/solana-historical-rpc/internal/store"
+	"github.com/lilythecat859/fractal-rpc/internal/config"
+	"github.com/lilythecat859/fractal-rpc/internal/rpc"
+	"github.com/lilythecat859/fractal-rpc/internal/store"
 	"go.uber.org/zap"
 )
 
-type Server struct {
-	cfg   *config.Config
-	log   *zap.Logger
-	store store.Store
-	srv   *http.Server
-}
+func Run(cfg *config.Config) error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-func New(cfg *config.Config, log *zap.Logger) (*Server, error) {
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+
 	st, err := store.NewClickHouse(
 		cfg.ClickHouse.Addr,
 		cfg.ClickHouse.Database,
@@ -30,30 +30,29 @@ func New(cfg *config.Config, log *zap.Logger) (*Server, error) {
 		cfg.ClickHouse.Codec,
 	)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("open store: %w", err)
 	}
-	return &Server{cfg: cfg, log: log, store: st}, nil
-}
+	defer st.Close()
 
-func (s *Server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
-	h := rpc.NewHandler(s.store)
-	h.Install(mux, s.cfg.RPCPath)
+	h := rpc.NewHandler(st)
+	path := cfg.RPCPath; if path == "" { path = "/" }; h.Install(mux, path)
 
-	s.srv = &http.Server{
-		Addr:        fmt.Sprintf(":%d", s.cfg.HTTPPort),
-		Handler:     mux,
-		BaseContext: func(net.Listener) context.Context { return ctx },
-		ReadTimeout: 5 * time.Second,
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.HTTPPort),
+		Handler: mux,
 	}
-	s.log.Info("listening", zap.Int("port", s.cfg.HTTPPort))
+
 	go func() {
-		<-ctx.Done()
-		s.log.Info("shutting down http")
-		_ = s.srv.Shutdown(context.Background())
+		logger.Info("listening", zap.Int("port", cfg.HTTPPort))
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatal("http serve", zap.Error(err))
+		}
 	}()
-	if err := s.srv.ListenAndServe(); err != http.ErrServerClosed {
-		return err
-	}
-	return nil
+
+	<-ctx.Done()
+	logger.Info("shutting down...")
+	shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return srv.Shutdown(shutCtx)
 }

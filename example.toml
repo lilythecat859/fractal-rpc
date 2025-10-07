@@ -1,0 +1,16 @@
+http_port = 8899
+rpc_path  = "/"
+[jwt_secret]
+value = "dev-secret"
+
+[clickhouse]
+addr     = "localhost:9000"
+database = "default"
+[clickhouse.auth]
+username = "default"
+password = ""
+
+[fractal]
+shard_bits        = 8
+cache_fraction    = 0.9
+parquet_page_size = 8192

@@ -1,14 +1,11 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
 package config
 
-import (
-	"github.com/spf13/viper"
-)
+import "github.com/spf13/viper"
 
 type Config struct {
-	HTTPPort   int    `mapstructure:"http_port"`
-	RPCPath    string `mapstructure:"rpc_path"`
-	JWTSecret  string `mapstructure:"jwt_secret"`
+	HTTPPort   int            `mapstructure:"http_port"`
+	RPCPath    string         `mapstructure:"rpc_path"`
+	JWTSecret  string         `mapstructure:"jwt_secret"`
 	ClickHouse ClickHouseConf `mapstructure:"clickhouse"`
 	S3         S3Conf         `mapstructure:"s3"`
 	Fractal    FractalConf    `mapstructure:"fractal"`
@@ -39,12 +36,14 @@ type FractalConf struct {
 }
 
 func MustLoad() *Config {
-	viper.SetConfigName("fractal")
+	viper.SetConfigName("fractal-rpc")
 	viper.SetConfigType("toml")
-	viper.AddConfigPath("/etc/fractal/")
+	viper.AddConfigPath("/etc/fractal-rpc/")
 	viper.AddConfigPath(".")
 	_ = viper.ReadInConfig()
 	var c Config
+	viper.SetDefault("http_port", 8899)
+	viper.SetDefault("rpc_path", "/")
 	if err := viper.Unmarshal(&c); err != nil {
 		panic(err)
 	}
