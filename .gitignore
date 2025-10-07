@@ -1,28 +1,22 @@
 # Binaries
 fractal
 *.exe
-*.dll
-*.so
-*.dylib
 
-# Test binary
+# Go
 *.test
-
-# Output of go coverage
 *.out
-
-# Go workspace
-/vendor/
+vendor/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Config with secrets
+# Config
 fractal.toml
