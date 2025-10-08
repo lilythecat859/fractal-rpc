@@ -1,16 +1,21 @@
 http_port = 0
-rpc_path  = "/"
-[jwt_secret]
-value = "dev-secret"
+rpc_path  = "/rpc"
+jwt_secret = "change-me"
 
 [clickhouse]
-addr     = "localhost:9000"
+addr = "localhost:9000"
 database = "default"
-[clickhouse.auth]
-username = "default"
-password = ""
+auth = { username = "default", password = "" }
+codec = {}
+
+[s3]
+bucket = "test"
+region = "us-east-1"
+access_key = ""
+secret_key = ""
+endpoint = ""
 
 [fractal]
-shard_bits        = 8
-cache_fraction    = 0.9
+shard_bits = 4
+cache_fraction = 0.1
 parquet_page_size = 8192
