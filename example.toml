@@ -1,4 +1,4 @@
-http_port = 8899
+http_port = 0
 rpc_path  = "/"
 [jwt_secret]
 value = "dev-secret"
