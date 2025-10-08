@@ -15,12 +15,9 @@ import (
 	"go.uber.org/zap"
 )
 
-func Run(cfg *config.Config) error {
+func Run(cfg *config.Config, logger *zap.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
 
 	st, err := store.NewClickHouse(
 		cfg.ClickHouse.Addr,
@@ -36,7 +33,11 @@ func Run(cfg *config.Config) error {
 
 	mux := http.NewServeMux()
 	h := rpc.NewHandler(st)
-	path := cfg.RPCPath; if path == "" { path = "/" }; h.Install(mux, path)
+	path := cfg.RPCPath
+	if path == "" {
+		path = "/"
+	}
+	h.Install(mux, path)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.HTTPPort),
@@ -51,7 +52,7 @@ func Run(cfg *config.Config) error {
 	}()
 
 	<-ctx.Done()
-	logger.Info("shutting down...")
+	logger.Info("shutting down gracefully")
 	shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	return srv.Shutdown(shutCtx)
