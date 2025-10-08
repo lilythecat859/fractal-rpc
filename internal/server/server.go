@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -50,8 +51,12 @@ func New(cfg *config.Config, logger *zap.Logger) *Server {
 }
 
 func (s *Server) Start() error {
-	s.logger.Info("listening", zap.String("addr", s.httpSrv.Addr))
-	return s.httpSrv.ListenAndServe()
+	ln, err := net.Listen("tcp", s.httpSrv.Addr)
+	if err != nil {
+		return err
+	}
+	s.logger.Info("listening", zap.String("addr", ln.Addr().String()))
+	return s.httpSrv.Serve(ln)
 }
 
 func (s *Server) Stop(ctx context.Context) error {
