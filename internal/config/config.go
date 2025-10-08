@@ -11,7 +11,6 @@ type Config struct {
 	Fractal    FractalConf    `mapstructure:"fractal"`
 }
 
-
 type ClickHouseConf struct {
 	Addr     string            `mapstructure:"addr"`
 	Database string            `mapstructure:"database"`
@@ -37,14 +36,15 @@ type FractalConf struct {
 }
 
 func MustLoad() *Config {
-	viper.SetConfigName("fractal-rpc")
+	viper.SetConfigName("example") // your file is example.toml
 	viper.SetConfigType("toml")
-	viper.AddConfigPath("/etc/fractal-rpc/")
 	viper.AddConfigPath(".")
 	_ = viper.ReadInConfig()
-	var c Config
+
 	viper.SetDefault("http_port", 8899)
 	viper.SetDefault("rpc_path", "/")
+
+	var c Config
 	if err := viper.Unmarshal(&c); err != nil {
 		panic(err)
 	}
