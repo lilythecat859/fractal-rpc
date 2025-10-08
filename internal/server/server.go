@@ -15,10 +15,12 @@ import (
 	"go.uber.org/zap"
 )
 
-func Run(cfg *config.Config, logger *zap.Logger) error {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
+type Server struct {
+	httpSrv *http.Server
+	logger  *zap.Logger
+}
 
+func New(cfg *config.Config, logger *zap.Logger) *Server {
 	st, err := store.NewClickHouse(
 		cfg.ClickHouse.Addr,
 		cfg.ClickHouse.Database,
@@ -27,9 +29,8 @@ func Run(cfg *config.Config, logger *zap.Logger) error {
 		cfg.ClickHouse.Codec,
 	)
 	if err != nil {
-		return fmt.Errorf("open store: %w", err)
+		logger.Fatal("open store", zap.Error(err))
 	}
-	defer st.Close()
 
 	mux := http.NewServeMux()
 	h := rpc.NewHandler(st)
@@ -39,15 +40,33 @@ func Run(cfg *config.Config, logger *zap.Logger) error {
 	}
 	h.Install(mux, path)
 
-	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.HTTPPort),
-		Handler: mux,
+	return &Server{
+		httpSrv: &http.Server{
+			Addr:    fmt.Sprintf(":%d", cfg.HTTPPort),
+			Handler: mux,
+		},
+		logger: logger,
 	}
+}
+
+func (s *Server) Start() error {
+	s.logger.Info("listening", zap.String("addr", s.httpSrv.Addr))
+	return s.httpSrv.ListenAndServe()
+}
+
+func (s *Server) Stop(ctx context.Context) error {
+	return s.httpSrv.Shutdown(ctx)
+}
+
+func Run(cfg *config.Config, logger *zap.Logger) error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	s := New(cfg, logger)
 
 	go func() {
-		logger.Info("listening", zap.Int("port", cfg.HTTPPort))
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatal("http serve", zap.Error(err))
+		if err := s.Start(); err != nil && err != http.ErrServerClosed {
+			logger.Fatal("server start", zap.Error(err))
 		}
 	}()
 
@@ -55,5 +74,5 @@ func Run(cfg *config.Config, logger *zap.Logger) error {
 	logger.Info("shutting down gracefully")
 	shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	return srv.Shutdown(shutCtx)
+	return s.Stop(shutCtx)
 }
