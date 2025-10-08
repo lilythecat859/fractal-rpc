@@ -37,10 +37,10 @@ type FractalConf struct {
 }
 
 func MustLoad() *Config {
-	viper.SetConfigName("example") // your file is example.toml
-	viper.SetConfigType("toml")
-	viper.AddConfigPath(".")
-	_ = viper.ReadInConfig()
+	viper.SetConfigFile("example.toml") // exact file, no search
+	if err := viper.ReadInConfig(); err != nil {
+		panic(err)
+	}
 
 	viper.SetDefault("http_port", 8899)
 	viper.SetDefault("rpc_path", "/")
