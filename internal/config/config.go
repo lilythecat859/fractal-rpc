@@ -11,6 +11,7 @@ type Config struct {
 	Fractal    FractalConf    `mapstructure:"fractal"`
 }
 
+
 type ClickHouseConf struct {
 	Addr     string            `mapstructure:"addr"`
 	Database string            `mapstructure:"database"`
