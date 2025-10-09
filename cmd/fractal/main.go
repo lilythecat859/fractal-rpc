@@ -1,39 +1,49 @@
 package main
 
 import (
-	"context"
-	"net"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+    "context"
+    "net/http"
+    "os"
+    "os/signal"
+    "syscall"
+    "time"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
+    "github.com/gorilla/mux"
+    "go.uber.org/zap"
+    "github.com/lilythecat859/fractal-rpc/internal/config"
+    "github.com/lilythecat859/fractal-rpc/internal/server"
 )
 
 func main() {
-	logger, _ := zap.NewDevelopment()
-	defer logger.Sync()
+    logger, _ := zap.NewDevelopment()
+    defer logger.Sync()
 
-	r := mux.NewRouter()
-	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok"}`))
-	}).Methods("GET")
+    cfg := config.MustLoad("example.toml")
 
-	srv := &http.Server{Addr: ":8080", Handler: r}
-	ln, _ := net.Listen("tcp", srv.Addr)
-	logger.Info("listening", zap.String("addr", ln.Addr().String()))
+    r := mux.NewRouter()
+    r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        w.Write([]byte(`{"status":"ok"}`))
+    }).Methods("GET")
 
-	go srv.Serve(ln)
+    srv := &http.Server{
+        Addr:    cfg.Server.Port,
+        Handler: r,
+    }
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+    ln, err := net.Listen("tcp", srv.Addr)
+    if err != nil {
+        logger.Fatal("listen", zap.Error(err))
+    }
+    logger.Info("listening", zap.String("addr", ln.Addr().String()))
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	srv.Shutdown(ctx)
+    go srv.Serve(ln)
+
+    quit := make(chan os.Signal, 1)
+    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+    <-quit
+
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    srv.Shutdown(ctx)
 }
