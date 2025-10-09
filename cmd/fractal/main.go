@@ -11,10 +11,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/lilythecat859/fractal-rpc/internal/config"
 	"go.uber.org/zap"
 )
 
+// ---------- JSON-RPC stubs (append only) ----------
 type rpcReq struct {
 	JSONRPC string          `json:"jsonrpc"`
 	Method  string          `json:"method"`
@@ -43,16 +45,6 @@ func rpcHandler(w http.ResponseWriter, r *http.Request) {
 	switch req.Method {
 	case "getSlot":
 		result = uint64(42)
-	case "getBlock":
-		result = map[string]interface{}{"blockHeight": 42}
-	case "getTransaction":
-		result = map[string]interface{}{"signature": "stub"}
-	case "getSignaturesForAddress":
-		result = []string{"sig1", "sig2"}
-	case "getBlocksWithLimit":
-		result = []uint64{42, 43}
-	case "getBlockTime":
-		result = int64(1672531200)
 	default:
 		rpcErr = &rpcError{Code: -32601, Message: "Method not found"}
 	}
@@ -65,21 +57,27 @@ func rpcHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
 }
+// ---------- end append ----------
 
 func main() {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync()
 
-	cfg := config.MustLoad() // no args
+	cfg := config.MustLoad("example.toml")
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	r := mux.NewRouter()
+	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"status":"ok"}`))
-	})
-	mux.HandleFunc("/", rpcHandler)
+		w.Write([]byte(`{"status":"ok"}`))
+	}).Methods("GET")
 
-	srv := &http.Server{Addr: cfg.Port, Handler: mux}
+	// single JSON-RPC entry point (append)
+	r.HandleFunc("/", rpcHandler).Methods("POST")
+
+	srv := &http.Server{
+		Addr:    cfg.Server.Port,
+		Handler: r,
+	}
 
 	ln, err := net.Listen("tcp", srv.Addr)
 	if err != nil {
@@ -95,5 +93,5 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_ = srv.Shutdown(ctx)
+	srv.Shutdown(ctx)
 }
