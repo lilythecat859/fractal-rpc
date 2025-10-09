@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 package main
 
 import (
 	"context"
+	"encoding/json"
 	"net"
 	"net/http"
 	"os"
@@ -14,6 +16,59 @@ import (
 	"go.uber.org/zap"
 )
 
+// ---------- JSON-RPC 2.0 stubs (same file) ----------
+type rpcReq struct {
+	JSONRPC string          `json:"jsonrpc"`
+	Method  string          `json:"method"`
+	Params  json.RawMessage `json:"params"`
+	ID      interface{}     `json:"id"`
+}
+type rpcResp struct {
+	JSONRPC string      `json:"jsonrpc"`
+	Result  interface{} `json:"result,omitempty"`
+	Error   *rpcErr     `json:"error,omitempty"`
+	ID      interface{} `json:"id"`
+}
+type rpcErr struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+func rpcHandler(w http.ResponseWriter, r *http.Request) {
+	var req rpcReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+	var result interface{}
+	var rpcErr *rpcErr
+	switch req.Method {
+	case "getSlot":
+		result = uint64(42) // stub
+	case "getBlock":
+		result = map[string]interface{}{"blockHeight": 42} // stub
+	case "getTransaction":
+		result = map[string]interface{}{"signature": "stub"} // stub
+	case "getSignaturesForAddress":
+		result = []string{"sig1", "sig2"} // stub
+	case "getBlocksWithLimit":
+		result = []uint64{42, 43} // stub
+	case "getBlockTime":
+		result = int64(1672531200) // stub
+	default:
+		rpcErr = &rpcErr{Code: -32601, Message: "Method not found"}
+	}
+	resp := rpcResp{JSONRPC: "2.0", ID: req.ID}
+	if rpcErr != nil {
+		resp.Error = rpcErr
+	} else {
+		resp.Result = result
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(resp)
+}
+// ---------- end JSON-RPC ----------
+
 func main() {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync()
@@ -25,6 +80,9 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"ok"}`))
 	}).Methods("GET")
+
+	// single JSON-RPC entry point
+	r.HandleFunc("/", rpcHandler).Methods("POST")
 
 	srv := &http.Server{
 		Addr:    cfg.Server.Port,
