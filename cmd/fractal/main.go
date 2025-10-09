@@ -16,7 +16,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// ---------- JSON-RPC stubs (append only) ----------
 type rpcReq struct {
 	JSONRPC string          `json:"jsonrpc"`
 	Method  string          `json:"method"`
@@ -57,25 +56,22 @@ func rpcHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
 }
-// ---------- end append ----------
 
 func main() {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync()
 
-	cfg := config.MustLoad("example.toml")
+	cfg := config.MustLoad()
 
 	r := mux.NewRouter()
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"ok"}`))
 	}).Methods("GET")
-
-	// single JSON-RPC entry point (append)
 	r.HandleFunc("/", rpcHandler).Methods("POST")
 
 	srv := &http.Server{
-		Addr:    cfg.Server.Port,
+		Addr:    cfg.Port,
 		Handler: r,
 	}
 
