@@ -7,7 +7,7 @@ on:
 env:
   GO_VERSION: 1.22
   REGISTRY: ghcr.io
-  IMAGE_NAME: lilythecat859/fractal
+  IMAGE_NAME: lilythecat859/fractal-rpc
 jobs:
   test:
     runs-on: ubuntu-latest
