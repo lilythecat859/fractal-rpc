@@ -1,0 +1,10 @@
+http_port = 8899
+
+[clickhouse]
+addr = "hipzw2qfdg.us-east1.gcp.clickhouse.cloud:9440"
+database = "default"
+tls = true
+
+[clickhouse.auth]
+username = "default"
+password = "lLf9u_SGeseym"
