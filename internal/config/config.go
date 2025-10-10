@@ -11,10 +11,9 @@ type Config struct {
 	Fractal    FractalConf    `mapstructure:"fractal"`
 }
 
-
 type ClickHouseConf struct {
-	Addr     string            `mapstructure:"addr"`
-	Database string            `mapstructure:"database"`
+	Addr     string `mapstructure:"addr"`
+	Database string `mapstructure:"database"`
 	Auth     struct {
 		Username string `mapstructure:"username"`
 		Password string `mapstructure:"password"`
@@ -37,11 +36,10 @@ type FractalConf struct {
 }
 
 func MustLoad() *Config {
-	viper.SetConfigFile("fractal.toml") // exact file, no search
+	viper.SetConfigFile("fractal.toml")
 	if err := viper.ReadInConfig(); err != nil {
 		panic(err)
 	}
-
 	viper.SetDefault("http_port", 8899)
 	viper.SetDefault("rpc_path", "/")
 
