@@ -37,7 +37,7 @@ type FractalConf struct {
 }
 
 func MustLoad() *Config {
-	viper.SetConfigFile("example.toml") // exact file, no search
+	viper.SetConfigFile("fractal.toml") // exact file, no search
 	if err := viper.ReadInConfig(); err != nil {
 		panic(err)
 	}
