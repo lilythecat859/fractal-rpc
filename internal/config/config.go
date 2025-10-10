@@ -54,3 +54,6 @@ func MustLoad() *Config {
 type Server struct {
 	Addr string `mapstructure:"addr"`
 }
+type Server struct{ Addr string `mapstructure:"addr"` }
+func (c *Config) Server() *Server { return &c.srv }
+var defaultConfig = &Config{srv: Server{Addr: ":8080"}}
