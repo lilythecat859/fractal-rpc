@@ -57,3 +57,7 @@ type Server struct {
 type Server struct{ Addr string `mapstructure:"addr"` }
 func (c *Config) Server() *Server { return &c.srv }
 var defaultConfig = &Config{srv: Server{Addr: ":8080"}}
+
+type Server struct {
+	Addr string `mapstructure:"addr"`
+}
