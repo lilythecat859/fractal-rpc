@@ -51,3 +51,6 @@ func MustLoad() *Config {
 	}
 	return &c
 }
+type Server struct {
+	Addr string `mapstructure:"addr"`
+}
