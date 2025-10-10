@@ -1,9 +1,8 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// cmd/fractal/main.go
 package main
 
 import (
 	"context"
-	"encoding/json"
 	"net"
 	"net/http"
 	"os"
@@ -11,51 +10,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/lilythecat859/fractal-rpc/internal/config"
+	"github.com/lilythecat859/fractal-rpc/internal/rpc"
+	"github.com/lilythecat859/fractal-rpc/internal/store"
 	"go.uber.org/zap"
 )
-
-type rpcReq struct {
-	JSONRPC string          `json:"jsonrpc"`
-	Method  string          `json:"method"`
-	Params  json.RawMessage `json:"params"`
-	ID      interface{}     `json:"id"`
-}
-type rpcResp struct {
-	JSONRPC string      `json:"jsonrpc"`
-	Result  interface{} `json:"result,omitempty"`
-	Error   *rpcError   `json:"error,omitempty"`
-	ID      interface{} `json:"id"`
-}
-type rpcError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-func rpcHandler(w http.ResponseWriter, r *http.Request) {
-	var req rpcReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid json", http.StatusBadRequest)
-		return
-	}
-	var result interface{}
-	var rpcErr *rpcError
-	switch req.Method {
-	case "getSlot":
-		result = uint64(42)
-	default:
-		rpcErr = &rpcError{Code: -32601, Message: "Method not found"}
-	}
-	resp := rpcResp{JSONRPC: "2.0", ID: req.ID}
-	if rpcErr != nil {
-		resp.Error = rpcErr
-	} else {
-		resp.Result = result
-	}
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(resp)
-}
 
 func main() {
 	logger, _ := zap.NewDevelopment()
@@ -63,17 +22,23 @@ func main() {
 
 	cfg := config.MustLoad()
 
-	r := mux.NewRouter()
-	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok"}`))
-	}).Methods("GET")
-	r.HandleFunc("/", rpcHandler).Methods("POST")
-
-	srv := &http.Server{
-		Addr:    cfg.Port,
-		Handler: r,
+	db, err := store.NewClickHouse(
+		cfg.ClickHouse.Addr,
+		cfg.ClickHouse.Database,
+		cfg.ClickHouse.Auth.Username,
+		cfg.ClickHouse.Auth.Password,
+		cfg.ClickHouse.Codec,
+	)
+	if err != nil {
+		logger.Fatal("store", zap.Error(err))
 	}
+	defer db.Close()
+
+	h := rpc.NewHandler(db)
+	mux := http.NewServeMux()
+	h.Install(mux, cfg.RPCPath)
+
+	srv := &http.Server{Addr: ":" + fmt.Sprint(cfg.HTTPPort), Handler: mux}
 
 	ln, err := net.Listen("tcp", srv.Addr)
 	if err != nil {
