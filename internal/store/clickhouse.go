@@ -7,7 +7,8 @@ import (
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	"github.com/gagliardetto/solana-go"
+        solana "github.com/lilythecat859/fractal-rpc/solana"
+
 )
 
 type clickHouse struct {

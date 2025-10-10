@@ -1,9 +1,9 @@
-// internal/store/store.go
+// 8internal/store/store.go
 package store
 
 import (
 	"context"
-	"github.com/gagliardetto/solana-go"
+	solana "github.com/lilythecat859/fractal-rpc/solana"
 )
 
 type Store interface {
