@@ -1,38 +1,25 @@
--- idempotent; safe to re-run
 CREATE DATABASE IF NOT EXISTS solana_history;
 
 CREATE TABLE IF NOT EXISTS solana_history.blocks
 (
-    slot        UInt64,
-    blockhash   FixedString(44),
-    prev_hash   FixedString(44),
-    block_time  DateTime,
-    height      UInt64,
-    tx_count    UInt32,
-    data        String CODEC(ZSTD(3))
+    slot       UInt64,
+    blockhash  FixedString(44),
+    prev_hash  FixedString(44),
+    block_time DateTime,
+    height     UInt64,
+    tx_count   UInt32,
+    data       String CODEC(ZSTD(3))
 ) ENGINE = ReplacingMergeTree()
 ORDER BY slot;
 
 CREATE TABLE IF NOT EXISTS solana_history.transactions
 (
-    slot        UInt64,
-    tx_sig      String,
-    idx         UInt32,
-    signers     Array(String),
-    fee         UInt64,
-    err         UInt8,
-    data        String CODEC(ZSTD(3))
-) ENGINE = ReplacingMergeTree()
-ORDER BY (slot, tx_sig);
-
-CREATE TABLE IF NOT EXISTS solana_history.accounts
-(
-    pubkey  String,
     slot    UInt64,
-    lamports UInt64,
-    owner   String,
-    executable UInt8,
-    rent_epoch UInt64,
+    tx_sig  String,
+    idx     UInt32,
+    signers Array(String),
+    fee     UInt64,
+    err     UInt8,
     data    String CODEC(ZSTD(3))
 ) ENGINE = ReplacingMergeTree()
-ORDER BY (pubkey, slot);
+ORDER BY (slot, tx_sig);
