@@ -57,3 +57,6 @@ AGPL-3.0-or-later
 > “The fractal nature of reality is that you can go forever in, and you get the same amount of detail forever out.”  
 > — Terence McKenna, *Evolving Times* lecture, Boulder, Colorado, October 1994
  
+
+## Screenshots  
+Folder: https://drive.google.com/drive/folders/1UuVj5KKO37IEWVDH8ZlOKgx5ztBnldCh
