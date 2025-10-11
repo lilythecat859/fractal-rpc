@@ -1,5 +1,3 @@
-
-
 package config
 
 import "github.com/spf13/viper"
@@ -11,11 +9,12 @@ type Config struct {
 	ClickHouse ClickHouseConf `mapstructure:"clickhouse"`
 	S3         S3Conf         `mapstructure:"s3"`
 	Fractal    FractalConf    `mapstructure:"fractal"`
+	srv        Server
 }
 
 type ClickHouseConf struct {
-	Addr     string `mapstructure:"addr"`
-	Database string `mapstructure:"database"`
+	Addr     string            `mapstructure:"addr"`
+	Database string            `mapstructure:"database"`
 	Auth     struct {
 		Username string `mapstructure:"username"`
 		Password string `mapstructure:"password"`
@@ -37,6 +36,10 @@ type FractalConf struct {
 	ParquetPageSize int     `mapstructure:"parquet_page_size"`
 }
 
+type Server struct {
+	Addr string `mapstructure:"addr"`
+}
+
 func MustLoad() *Config {
 	viper.SetConfigFile("fractal.toml")
 	if err := viper.ReadInConfig(); err != nil {
@@ -51,20 +54,6 @@ func MustLoad() *Config {
 	}
 	return &c
 }
-type Server struct {
-	Addr string `mapstructure:"addr"`
-}
-type Server struct{ Addr string `mapstructure:"addr"` }
-func (c *Config) Server() *Server { return &c.srv }
-var defaultConfig = &Config{srv: Server{Addr: ":8080"}}
-
-type Server struct {
-	Addr string `mapstructure:"addr"`
-}
-
-type Server struct {
-	Addr string `mapstructure:"addr"`
-}
 
 func (c *Config) Server() *Server {
 	if c.srv.Addr == "" {
@@ -72,5 +61,3 @@ func (c *Config) Server() *Server {
 	}
 	return &c.srv
 }
-
-var defaultConfig = &Config{srv: Server{Addr: ":8080"}}
