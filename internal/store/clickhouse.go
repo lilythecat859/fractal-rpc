@@ -6,7 +6,6 @@ import (
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	solana "github.com/lilythecat859/fractal-rpc/solana"
 )
 
 type clickHouse struct {
@@ -15,7 +14,7 @@ type clickHouse struct {
 
 type Store interface {
 	GetSlot(ctx context.Context) (uint64, error)
-	GetBlock(ctx context.Context, slot uint64) (*solana.Block, error)
+	GetBlock(ctx context.Context, slot uint64) ([]byte, error)
 	GetBlockTime(ctx context.Context, slot uint64) (int64, error)
 	GetSignaturesForAddress(ctx context.Context, addr string, before string, until string, limit uint) ([]string, error)
 	Close() error
@@ -65,17 +64,13 @@ func (c *clickHouse) GetBlockTime(ctx context.Context, slot uint64) (int64, erro
 	return *t, nil
 }
 
-func (c *clickHouse) GetBlock(ctx context.Context, slot uint64) (*solana.Block, error) {
+func (c *clickHouse) GetBlock(ctx context.Context, slot uint64) ([]byte, error) {
 	row := c.conn.QueryRow(ctx, "SELECT data FROM blocks WHERE slot = ?", slot)
 	var raw []byte
 	if err := row.Scan(&raw); err != nil {
 		return nil, err
 	}
-	blk := new(solana.Block)
-	if err := blk.UnmarshalBinary(raw); err != nil {
-		return nil, err
-	}
-	return blk, nil
+	return raw, nil
 }
 
 func (c *clickHouse) GetSignaturesForAddress(ctx context.Context, addr string, before, until string, limit uint) ([]string, error) {
