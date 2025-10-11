@@ -1,4 +1,3 @@
-// internal/store/clickhouse.go
 package store
 
 import (
@@ -7,15 +6,13 @@ import (
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-        solana "github.com/lilythecat859/fractal-rpc/solana"
-
 )
 
 type clickHouse struct {
 	conn driver.Conn
 }
 
-func NewClickHouse(addr, db, user, pass string, codec map[string]string) (Store, error) {
+func NewClickHouse(addr, db, user, pass string) (Store, error) {
 	conn, err := clickhouse.Open(&clickhouse.Options{
 		Addr: []string{addr},
 		Auth: clickhouse.Auth{
@@ -36,7 +33,7 @@ func NewClickHouse(addr, db, user, pass string, codec map[string]string) (Store,
 func (c *clickHouse) Close() error { return c.conn.Close() }
 
 func (c *clickHouse) GetSlot(ctx context.Context) (uint64, error) {
-	row := c.conn.QueryRow(ctx, `SELECT max(slot) FROM blocks`)
+	row := c.conn.QueryRow(ctx, "SELECT max(slot) FROM blocks")
 	var slot *uint64
 	if err := row.Scan(&slot); err != nil {
 		return 0, err
@@ -48,7 +45,7 @@ func (c *clickHouse) GetSlot(ctx context.Context) (uint64, error) {
 }
 
 func (c *clickHouse) GetBlockTime(ctx context.Context, slot uint64) (int64, error) {
-	row := c.conn.QueryRow(ctx, `SELECT block_time FROM blocks WHERE slot = ?`, slot)
+	row := c.conn.QueryRow(ctx, "SELECT block_time FROM blocks WHERE slot = ?", slot)
 	var t *int64
 	if err := row.Scan(&t); err != nil {
 		return 0, err
@@ -59,15 +56,34 @@ func (c *clickHouse) GetBlockTime(ctx context.Context, slot uint64) (int64, erro
 	return *t, nil
 }
 
-func (c *clickHouse) GetBlock(ctx context.Context, slot uint64) (*solana.Block, error) {
-	row := c.conn.QueryRow(ctx, `SELECT data FROM blocks WHERE slot = ?`, slot)
+func (c *clickHouse) GetBlock(ctx context.Context, slot uint64) ([]byte, error) {
+	row := c.conn.QueryRow(ctx, "SELECT data FROM blocks WHERE slot = ?", slot)
 	var raw []byte
 	if err := row.Scan(&raw); err != nil {
 		return nil, err
 	}
-	var block solana.Block
-	if err := block.UnmarshalBinary(raw); err != nil {
+	return raw, nil
+}
+
+func (c *clickHouse) GetSignaturesForAddress(ctx context.Context, addr string, before, until string, limit uint) ([]string, error) {
+	rows, err := c.conn.Query(ctx,
+		`SELECT tx_sig FROM transactions
+		  WHERE has(signers, ?)
+		    AND (?, '') = ('', '')
+		    AND (?, '') = ('', '')
+		  ORDER BY slot DESC
+		  LIMIT ?`, addr, before, until, limit)
+	if err != nil {
 		return nil, err
 	}
-	return &block, nil
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var sig string
+		if err := rows.Scan(&sig); err != nil {
+			return nil, err
+		}
+		out = append(out, sig)
+	}
+	return out, nil
 }
